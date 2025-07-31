@@ -26,7 +26,7 @@ The application runs entirely from the **command line**. It accepts user actions
 ## ⚙️ Constraints
 
 - Uses **only the standard library** (no third-party dependencies).
-- Uses **flags** (`-h`, `-add`, `-update`, etc.) for CLI usage.
+- Uses **flags** (`-h` for help) for CLI usage.
 - JSON file is **automatically created** if it doesn’t exist.
 - Uses the **native file system module** for I/O operations.
 - Implements **error handling** and **graceful fallbacks**.
