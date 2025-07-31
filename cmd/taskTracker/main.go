@@ -23,10 +23,17 @@ func main() {
 	if err := utils.SetStorage(TASK_STORAGE, INDEX_STORAGE, LOG_STORAGE); err != nil {
 		log.Fatal(err)
 	}
+
+	if err := execute(); err != nil{
+		log.Fatal(err)
+	}
+}
+
+func execute() error {
 	fPath := utils.GetTargetPath(TASK_STORAGE)
 	lastID, err := utils.ReadLastID(STORAGE_LAST_ID)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	createFlag := flag.Bool("c", false, "create task")
@@ -52,10 +59,10 @@ func main() {
 
 	if *createFlag {
 		if *descFlag == "" {
-			log.Fatal("provide description for the task")
+			return errors.New("provide task description")
 		}
 		if err := task.CreateTask(fPath, *descFlag, *doneFlag, lastID); err != nil {
-			log.Fatal(err)
+			return err
 		}
 	}
 	if *updateFlag && *idFlag > 0 {
@@ -63,9 +70,9 @@ func main() {
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				fmt.Println("task does not exist")
-				return
+				return nil
 			}
-			log.Fatal(err)
+			return err
 		}
 		if err := task.Update(*idFlag, *doneFlag, *descFlag, targetFile); err != nil {
 			log.Fatal(err)
@@ -76,9 +83,9 @@ func main() {
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				fmt.Println("task does not exist")
-				return
+				return os.ErrNotExist
 			}
-			log.Fatal(err)
+			return err
 		}
 		if err := task.Delete(*idFlag, targetFile); err != nil {
 			log.Fatal(err)
@@ -87,11 +94,11 @@ func main() {
 	if *getTodayFlag {
 		targetFile, err := task.SearchByID(lastID, INDEX_STORAGE, TASK_STORAGE)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		arr, err := task.GetToday(lastID, targetFile)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		for _, t := range arr {
@@ -103,34 +110,35 @@ func main() {
 	if *getByIDFlag && *idFlag > 0 {
 		targetFile, err := task.SearchByID(*idFlag, INDEX_STORAGE, TASK_STORAGE)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		t, err := task.GetByID(*idFlag, targetFile)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		utils.ShowTask(*t)
 	}
 
 	if *listFlag {
 		f := types.NewFilter()
-		if *dayFlag > 0 && *dayFlag < 32{
+		if *dayFlag > 0 && *dayFlag < 32 {
 			f.Day = *dayFlag
 		}
-		if *monthFlag > 0 && *monthFlag < 13{
+		if *monthFlag > 0 && *monthFlag < 13 {
 			f.Month = *monthFlag
 		}
-		if *yearFlag > 2025{
+		if *yearFlag > 2025 {
 			f.Year = *yearFlag
 		}
 		arr, err := task.GetByDate(TASK_STORAGE, f)
-		if err != nil{
-			log.Fatal(err)
+		if err != nil {
+			return err
 		}
-		for _, elem := range arr{
+		for _, elem := range arr {
 			utils.ShowTask(*elem)
 		}
 	}
 
 	log.Println("Finished successfully")
+	return nil
 }
